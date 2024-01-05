@@ -1,11 +1,15 @@
-console.log(
+var doLog = console.log;
+
+doLog(
   "__________________________________________________________________________________"
 );
 
 class Piece {
-  constructor(position, color) {
+  constructor(position, color, game) {
     this._position = position;
     this.color = color; // can be true or false
+    this.game = game;
+    this.pieceName = this.constructor.name;
   }
 
   get position() {
@@ -21,11 +25,11 @@ class Piece {
       )
     ) {
       this._position = { x: nX, y: nY };
-      game.chessBoard[nY][nX].isEmpty = false;
-      game.chessBoard[nY][nX].piece = game.chessBoard[y][x].piece;
-      
-      game.chessBoard[y][x].isEmpty = true;
-      game.chessBoard[y][x].piece = undefined;
+      this.game.chessBoard[nY][nX].isEmpty = false;
+      this.game.chessBoard[nY][nX].piece = this.game.chessBoard[y][x].piece;
+
+      this.game.chessBoard[y][x].isEmpty = true;
+      this.game.chessBoard[y][x].piece = undefined;
     }
   }
 
@@ -33,12 +37,21 @@ class Piece {
     return x >= 0 && x <= 7 && y >= 0 && y <= 7;
   }
 
-  possibleMoves() {}
+  checkNextPositionPiece(x, y) {
+    return (
+      this.game.chessBoard[y][x].isEmpty ||
+      this.game.chessBoard[y][x]?.piece?.color !== this.color
+    );
+  }
+
+  possibleMoves() {
+    return [];
+  }
 }
 
 class Pawn extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
   }
 
   possibleMoves(enPassant) {
@@ -47,31 +60,31 @@ class Pawn extends Piece {
     if (!this.color) {
       // if black
       if (y === 1) possibleMovesArr.push({ x: x, y: y + 2 }); // double move ahead
-      if (game.chessBoard[y + 1][x].isEmpty)
+      if (this.game.chessBoard[y + 1][x].isEmpty)
         possibleMovesArr.push({ x: x, y: y + 1 }); // move ahead
       if (
-        game.chessBoard[y + 1][x + 1].piece?.color !== this.color &&
-        game.chessBoard[y + 1][x + 1].piece?.color !== undefined
+        this.game.chessBoard[y + 1][x + 1]?.piece?.color !== this.color &&
+        this.game.chessBoard[y + 1][x + 1]?.piece?.color !== undefined
       )
         possibleMovesArr.push({ x: x + 1, y: y + 1 }); // attack ahead right
       if (
-        game.chessBoard[y + 1][x - 1].piece?.color !== this.color &&
-        game.chessBoard[y + 1][x - 1].piece?.color !== undefined
+        this.game.chessBoard[y + 1][x - 1]?.piece?.color !== this.color &&
+        this.game.chessBoard[y + 1][x - 1]?.piece?.color !== undefined
       )
         possibleMovesArr.push({ x: x - 1, y: y + 1 }); // attack ahead left
     } else {
       // if white
       if (y === 6) possibleMovesArr.push({ x: x, y: y - 2 }); // double move ahead
-      if (game.chessBoard[y - 1][x].isEmpty)
+      if (this.game.chessBoard[y - 1][x].isEmpty)
         possibleMovesArr.push({ x: x, y: y - 1 }); // move ahead
       if (
-        game.chessBoard[y - 1][x + 1].piece?.color !== this.color &&
-        game.chessBoard[y - 1][x + 1].piece?.color !== undefined
+        this.game.chessBoard[y - 1][x + 1]?.piece?.color !== this.color &&
+        this.game.chessBoard[y - 1][x + 1]?.piece?.color !== undefined
       )
         possibleMovesArr.push({ x: x + 1, y: y - 1 }); // attack ahead right
       if (
-        game.chessBoard[y - 1][x - 1].piece?.color !== this.color &&
-        game.chessBoard[y - 1][x - 1].piece?.color !== undefined
+        this.game.chessBoard[y - 1][x - 1]?.piece?.color !== this.color &&
+        this.game.chessBoard[y - 1][x - 1]?.piece?.color !== undefined
       )
         possibleMovesArr.push({ x: x - 1, y: y - 1 }); // attack ahead left
     }
@@ -80,8 +93,8 @@ class Pawn extends Piece {
 }
 
 class Bishop extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
   }
 
   possibleMoves() {
@@ -95,11 +108,8 @@ class Bishop extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y + 1)
     ) {
-      if (game.chessBoard[++y][++x]?.piece?.color === this.color) break;
-      if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
-      )
+      if (this.game.chessBoard[++y][++x]?.piece?.color === this.color) break;
+      if (this.checkNextPositionPiece(x, y))
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
@@ -107,11 +117,8 @@ class Bishop extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y - 1)
     ) {
-      if (game.chessBoard[--y][++x]?.piece?.color === this.color) break;
-      if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
-      )
+      if (this.game.chessBoard[--y][++x]?.piece?.color === this.color) break;
+      if (this.checkNextPositionPiece(x, y))
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
@@ -119,11 +126,8 @@ class Bishop extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y + 1)
     ) {
-      if (game.chessBoard[++y][--x]?.piece?.color === this.color) break;
-      if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
-      )
+      if (this.game.chessBoard[++y][--x]?.piece?.color === this.color) break;
+      if (this.checkNextPositionPiece(x, y))
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
@@ -131,26 +135,44 @@ class Bishop extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y - 1)
     ) {
-      if (game.chessBoard[--y][--x]?.piece?.color === this.color) break;
-      if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
-      )
+      if (this.game.chessBoard[--y][--x]?.piece?.color === this.color) break;
+      if (this.checkNextPositionPiece(x, y))
         possibleMovesArr.push({ x: x, y: y });
+      possibleMovesArr.push({ x: x, y: y });
     }
     return possibleMovesArr;
   }
 }
 
 class Knight extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
+  }
+  possibleMoves() {
+    var possibleMoves = [];
+    var { x, y } = this._position;
+    var allPossibleMoves = [
+      { x: x - 1, y: y + 2 },
+      { x: x + 1, y: y + 2 },
+      { x: x + 2, y: y + 1 },
+      { x: x + 2, y: y - 1 },
+      { x: x + 1, y: y - 2 },
+      { x: x - 1, y: y - 2 },
+      { x: x - 2, y: y - 1 },
+      { x: x - 2, y: y + 1 },
+    ];
+    for (var item of allPossibleMoves) {
+      var { x, y } = item;
+      if (this.positionValidator(x, y) && this.checkNextPositionPiece(x, y))
+        possibleMoves.push(item);
+    }
+    return possibleMoves;
   }
 }
 
 class Rock extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
   }
 
   possibleMoves() {
@@ -161,37 +183,37 @@ class Rock extends Piece {
       y = this._position.y;
     };
     while (this.positionValidator(x, y) && this.positionValidator(x + 1, y)) {
-      if (game.chessBoard[y][++x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[y][++x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x, y + 1)) {
-      if (game.chessBoard[++y][x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[++y][x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x - 1, y)) {
-      if (game.chessBoard[y][--x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[y][--x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x, y - 1)) {
-      if (game.chessBoard[--y][x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[--y][x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
@@ -200,8 +222,8 @@ class Rock extends Piece {
 }
 
 class Queen extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
   }
 
   possibleMoves() {
@@ -216,10 +238,10 @@ class Queen extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y + 1)
     ) {
-      if (game.chessBoard[++y][++x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[++y][++x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
@@ -228,10 +250,10 @@ class Queen extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y - 1)
     ) {
-      if (game.chessBoard[--y][++x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[--y][++x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
@@ -240,10 +262,10 @@ class Queen extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y + 1)
     ) {
-      if (game.chessBoard[++y][--x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[++y][--x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
@@ -252,46 +274,46 @@ class Queen extends Piece {
       this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y - 1)
     ) {
-      if (game.chessBoard[--y][--x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[--y][--x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
 
     while (this.positionValidator(x, y) && this.positionValidator(x + 1, y)) {
-      if (game.chessBoard[y][++x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[y][++x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x, y + 1)) {
-      if (game.chessBoard[++y][x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[++y][x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x - 1, y)) {
-      if (game.chessBoard[y][--x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[y][--x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
     resetXY();
     while (this.positionValidator(x, y) && this.positionValidator(x, y - 1)) {
-      if (game.chessBoard[--y][x]?.piece?.color === this.color) break;
+      if (this.game.chessBoard[--y][x]?.piece?.color === this.color) break;
       if (
-        game.chessBoard[y][x].isEmpty ||
-        game.chessBoard[y][x]?.piece?.color !== this.color
+        this.game.chessBoard[y][x].isEmpty ||
+        this.game.chessBoard[y][x]?.piece?.color !== this.color
       )
         possibleMovesArr.push({ x: x, y: y });
     }
@@ -300,20 +322,65 @@ class Queen extends Piece {
 }
 
 class King extends Piece {
-  constructor(position, color) {
-    super(position, color);
+  constructor(position, color, game) {
+    super(position, color, game);
   }
   possibleMoves() {
     var possibleMovesArr = [];
     var { x, y } = this._position;
-    var resetXY = () => {
-      x = this._position.x;
-      y = this._position.y;
-    };
 
-    for (var x = -1; x <= 1; x++) {
-      // if()
+    for (var newX = -1; newX <= 1; newX++) {
+      if (
+        this.positionValidator(x + newX, y + 1) &&
+        this.checkNextPositionPiece(x + newX, y + 1)
+      )
+        possibleMovesArr.push({ x: x + newX, y: y + 1 });
+      if (
+        this.positionValidator(x + newX, y - 1) &&
+        this.checkNextPositionPiece(x + newX, y - 1)
+      )
+        possibleMovesArr.push({ x: x + newX, y: y - 1 });
     }
+    if (
+      this.positionValidator(x + 1, y) &&
+      this.checkNextPositionPiece(x + 1, y)
+    )
+      possibleMovesArr.push({ x: x + 1, y: y });
+    if (
+      this.positionValidator(x - 1, y) &&
+      this.checkNextPositionPiece(x - 1, y)
+    )
+      possibleMovesArr.push({ x: x - 1, y: y });
+
+    return possibleMovesArr.filter(
+      (pos) => !this.isSquareAttacked().has(JSON.stringify(pos))
+    );
+  }
+
+  // For checking is the square where the king wants to move is attacked by enemy piece
+  isSquareAttacked() {
+    var squaresUnderAttack = new Set();
+    for (var y = 0; y < 8; y++) {
+      for (var x = 0; x < 8; x++) {
+        var square = this.game.chessBoard[y][x];
+        if (square.piece && square.piece.color !== this.color) {
+          var possibleMoves =
+            square.piece.pieceName !== "Pawn"
+              ? square.piece.possibleMoves()
+              : (() => {
+                  var { x, y } = square.piece._position;
+                  return [
+                    { x: x + 1, y: square.piece.color ? y - 1 : y + 1 },
+                    { x: x - 1, y: square.piece.color ? y - 1 : y + 1 },
+                  ];
+                })();
+          possibleMoves.forEach((item) =>
+            squaresUnderAttack.add(JSON.stringify(item))
+          );
+        }
+      }
+    }
+    return squaresUnderAttack;
   }
 }
 
@@ -326,8 +393,12 @@ class ChessBoard {
     for (var y = 0; y <= 7; y++) {
       this.chessBoard[y] = [];
       var color = y <= 1 ? false : true;
+
       for (var x = 0; x <= 7; x++) {
+        // Empty squares
         if (y > 1 && y < 6) this.chessBoard[y][x] = new Square(true);
+
+        // Bishops
         if (
           (y === 0 && x === 2) ||
           (y === 0 && x === 5) ||
@@ -336,8 +407,10 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
-            new Bishop({ x: x, y: y }, color)
-          ); // Bishops
+            new Bishop({ x: x, y: y }, color, this)
+          );
+
+        //Rocks
         if (
           (y === 0 && x === 0) ||
           (y === 0 && x === 7) ||
@@ -346,8 +419,10 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
-            new Rock({ x: x, y: y }, color)
-          ); // Rocks
+            new Rock({ x: x, y: y }, color, this)
+          );
+
+        //Knights
         if (
           (y === 0 && x === 1) ||
           (y === 0 && x === 6) ||
@@ -356,23 +431,29 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
-            new Knight({ x: x, y: y }, color)
-          ); // Knights
+            new Knight({ x: x, y: y }, color, this)
+          );
+
+        //Kings
         if ((y === 0 && x === 4) || (y === 7 && x === 4))
           this.chessBoard[y][x] = new Square(
             false,
-            new King({ x: x, y: y }, color)
-          ); // Kings
+            new King({ x: x, y: y }, color, this)
+          );
+
+        //Queens
         if ((y === 0 && x === 3) || (y === 7 && x === 3))
           this.chessBoard[y][x] = new Square(
             false,
-            new Queen({ x: x, y: y }, color)
-          ); // Queens
+            new Queen({ x: x, y: y }, color, this)
+          );
+
+        //Pawns
         if (y === 1 || y === 6)
           this.chessBoard[y][x] = new Square(
             false,
-            new Pawn({ x: x, y: y }, color)
-          ); // Pawns
+            new Pawn({ x: x, y: y }, color, this)
+          );
       }
     }
   }
@@ -386,9 +467,40 @@ class Square {
 }
 
 var game = new ChessBoard();
+var chessBoard = game.chessBoard;
 
-for (let y = 0; y <= 7; y++) {
-  for (let x = 0; x <= 7; x++) {
-    console.log(`y: ${y} | x: ${x}`, game.chessBoard[y][x]);
-  }
-}
+// Show all board
+// for (let y = 0; y <= 7; y++) {
+//   for (let x = 0; x <= 7; x++) {
+//     doLog(`y: ${y} | x: ${x}`, game.chessBoard[y][x]);
+//   }
+// }
+
+
+// check king`s moves
+// var blackKing = chessBoard[0][4].piece;
+// chessBoard[1][4].piece.doMove(4, 3);
+// doLog(blackKing.possibleMoves().length, "Must be 1");
+// blackKing.doMove(4, 1);
+// doLog(blackKing.possibleMoves().length, "Must be 4");
+// blackKing.doMove(4, 2);
+// doLog(blackKing.possibleMoves().length, "Must be 5");
+// blackKing.doMove(5, 3);
+// doLog(blackKing.possibleMoves().length, "Must be 7");
+// blackKing.doMove(6, 4);
+// // doLog(blackKing.isSquareAttacked());
+// doLog(blackKing.possibleMoves().length, "Must be 5");
+
+//check knight moves
+// var knightBlackLeft = chessBoard[0][1].piece
+// console.log(knightBlackLeft.possibleMoves())
+// knightBlackLeft.doMove(2, 2)
+// console.log(knightBlackLeft.possibleMoves())
+// knightBlackLeft.doMove(4, 3)
+// console.log(knightBlackLeft.possibleMoves())
+// knightBlackLeft.doMove(2, 4)
+// console.log(knightBlackLeft.possibleMoves())
+
+
+
+
