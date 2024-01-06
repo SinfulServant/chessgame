@@ -1,9 +1,3 @@
-var doLog = console.log;
-
-doLog(
-  "__________________________________________________________________________________"
-);
-
 class Piece {
   constructor(position, color, game) {
     this._position = position;
@@ -170,7 +164,7 @@ class Knight extends Piece {
   }
 }
 
-class Rock extends Piece {
+class Rook extends Piece {
   constructor(position, color, game) {
     super(position, color, game);
   }
@@ -396,7 +390,8 @@ class ChessBoard {
 
       for (var x = 0; x <= 7; x++) {
         // Empty squares
-        if (y > 1 && y < 6) this.chessBoard[y][x] = new Square(true);
+        if (y > 1 && y < 6)
+          this.chessBoard[y][x] = new Square(true, { x: x, y: y });
 
         // Bishops
         if (
@@ -407,10 +402,11 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
+            { x: x, y: y },
             new Bishop({ x: x, y: y }, color, this)
           );
 
-        //Rocks
+        //Rooks
         if (
           (y === 0 && x === 0) ||
           (y === 0 && x === 7) ||
@@ -419,7 +415,8 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
-            new Rock({ x: x, y: y }, color, this)
+            { x: x, y: y },
+            new Rook({ x: x, y: y }, color, this)
           );
 
         //Knights
@@ -431,6 +428,7 @@ class ChessBoard {
         )
           this.chessBoard[y][x] = new Square(
             false,
+            { x: x, y: y },
             new Knight({ x: x, y: y }, color, this)
           );
 
@@ -438,6 +436,7 @@ class ChessBoard {
         if ((y === 0 && x === 4) || (y === 7 && x === 4))
           this.chessBoard[y][x] = new Square(
             false,
+            { x: x, y: y },
             new King({ x: x, y: y }, color, this)
           );
 
@@ -445,6 +444,7 @@ class ChessBoard {
         if ((y === 0 && x === 3) || (y === 7 && x === 3))
           this.chessBoard[y][x] = new Square(
             false,
+            { x: x, y: y },
             new Queen({ x: x, y: y }, color, this)
           );
 
@@ -452,6 +452,7 @@ class ChessBoard {
         if (y === 1 || y === 6)
           this.chessBoard[y][x] = new Square(
             false,
+            { x: x, y: y },
             new Pawn({ x: x, y: y }, color, this)
           );
       }
@@ -460,14 +461,15 @@ class ChessBoard {
 }
 
 class Square {
-  constructor(isEmpty, piece = undefined) {
+  constructor(isEmpty, position, piece = undefined) {
     this.isEmpty = isEmpty;
     this.piece = piece;
+    this.position = position;
   }
 }
 
-var game = new ChessBoard();
-var chessBoard = game.chessBoard;
+// var game = new ChessBoard();
+// var chessBoard = game.chessBoard;
 
 // Show all board
 // for (let y = 0; y <= 7; y++) {
@@ -475,7 +477,6 @@ var chessBoard = game.chessBoard;
 //     doLog(`y: ${y} | x: ${x}`, game.chessBoard[y][x]);
 //   }
 // }
-
 
 // check king`s moves
 // var blackKing = chessBoard[0][4].piece;
@@ -500,7 +501,3 @@ var chessBoard = game.chessBoard;
 // console.log(knightBlackLeft.possibleMoves())
 // knightBlackLeft.doMove(2, 4)
 // console.log(knightBlackLeft.possibleMoves())
-
-
-
-
