@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Chess</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <div id="app">
+      <div class="h-[100vh] flex flex-col justify-center">
+        <div
+          class="flex justify-center"
+          v-for="(row, rowIndex) in game.chessBoard"
+        >
+          <div
+            v-for="(square, squareIndex) in row"
+            class="h-[70px] w-[70px] flex justify-center aling-center border"
+            :class="changeSquareBackgroung(rowIndex, squareIndex)"
+            @click="changeActivePiece(square)"
+          >
+            <img
+              :src="addPiecePicture(square)"
+              :width="changeWidthOfPiece(square)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="chessboard.js"></script>
+    <script>
+      const { createApp, ref } = Vue;
+
+      createApp({
+        data() {
+          return {
+            game: new ChessBoard(),
+            activePiece: undefined,
+          };
+        },
+        setup() {
+          return {};
+        },
+        methods: {
+          changeSquareBackgroung(rowIndex, squareIndex) {
+            return rowIndex % 2
+              ? squareIndex % 2
+                ? "bg-orange-50"
+                : "bg-orange-600"
+              : squareIndex % 2
+              ? "bg-orange-600"
+              : "bg-orange-50";
+          },
+          addPiecePicture(square) {
+            if (square.piece) {
+              const piece = square.piece;
+              const colorPrefix = piece.color ? "w" : "b";
+              const pieceType = piece.pieceName.toLowerCase();
+              return `assets/${colorPrefix}_${pieceType}_svg_NoShadow.svg`;
+            }
+          },
+          changeWidthOfPiece(square) {
+            if (square.piece)
+              return square.piece.pieceName === "Pawn" ? "40px" : "50px";
+          },
+          changeActivePiece(square) {
+            if (this.activePiece) {
+              console.log(this.activePiece);
+              this.activePiece.doMove(square.position.x, square.position.y);
+              this.activePiece = undefined;
+            } else {
+              console.log(square.piece);
+              square.piece ? (this.activePiece = square.piece) : undefined;
+            }
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
