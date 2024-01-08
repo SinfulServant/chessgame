@@ -99,7 +99,7 @@ class Bishop extends Piece {
       y = this._position.y;
     };
     while (
-      this.positionValidator(x, y) &&
+      // this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y + 1)
     ) {
       if (this.game.chessBoard[++y][++x]?.piece?.color === this.color) break;
@@ -108,7 +108,7 @@ class Bishop extends Piece {
     }
     resetXY();
     while (
-      this.positionValidator(x, y) &&
+      // this.positionValidator(x, y) &&
       this.positionValidator(x + 1, y - 1)
     ) {
       if (this.game.chessBoard[--y][++x]?.piece?.color === this.color) break;
@@ -117,7 +117,7 @@ class Bishop extends Piece {
     }
     resetXY();
     while (
-      this.positionValidator(x, y) &&
+      // this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y + 1)
     ) {
       if (this.game.chessBoard[++y][--x]?.piece?.color === this.color) break;
@@ -126,13 +126,12 @@ class Bishop extends Piece {
     }
     resetXY();
     while (
-      this.positionValidator(x, y) &&
+      // this.positionValidator(x, y) &&
       this.positionValidator(x - 1, y - 1)
     ) {
       if (this.game.chessBoard[--y][--x]?.piece?.color === this.color) break;
       if (this.checkNextPositionPiece(x, y))
         possibleMovesArr.push({ x: x, y: y });
-      possibleMovesArr.push({ x: x, y: y });
     }
     return possibleMovesArr;
   }

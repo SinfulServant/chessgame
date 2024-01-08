@@ -17,7 +17,7 @@
         >
           <div
             v-for="(square, squareIndex) in row"
-            class="h-[70px] w-[70px] flex justify-center aling-center border"
+            class="h-[70px] w-[70px] flex justify-center aling-center"
             :class="changeSquareBackgroung(rowIndex, squareIndex)"
             @click="changeActivePiece(square)"
           >
@@ -66,6 +66,7 @@
               return square.piece.pieceName === "Pawn" ? "40px" : "50px";
           },
           changeActivePiece(square) {
+            console.log(this.activePiece);
             if (this.activePiece) {
               console.log(this.activePiece);
               this.activePiece.doMove(square.position.x, square.position.y);
@@ -78,5 +79,5 @@
         },
       }).mount("#app");
     </script>
-  </body>
+  </body> 
 </html>
