@@ -45,13 +45,19 @@
         },
         methods: {
           changeSquareBackgroung(rowIndex, squareIndex) {
+            var isActive = () =>
+              this.activePiece &&
+              JSON.stringify(this.activePiece._position) ===
+                JSON.stringify({ x: squareIndex, y: rowIndex });
+            var orangeLight = isActive() ? "bg-orange-200" : "bg-orange-50";
+            var orangeBlack = isActive() ? "bg-orange-800" : "bg-orange-600";
             return rowIndex % 2
               ? squareIndex % 2
-                ? "bg-orange-50"
-                : "bg-orange-600"
+                ? orangeLight
+                : orangeBlack
               : squareIndex % 2
-              ? "bg-orange-600"
-              : "bg-orange-50";
+              ? orangeBlack
+              : orangeLight;
           },
           addPiecePicture(square) {
             if (square.piece) {
@@ -66,18 +72,19 @@
               return square.piece.pieceName === "Pawn" ? "40px" : "50px";
           },
           changeActivePiece(square) {
-            console.log(this.activePiece);
+            console.log(square);
             if (this.activePiece) {
-              console.log(this.activePiece);
               this.activePiece.doMove(square.position.x, square.position.y);
               this.activePiece = undefined;
             } else {
-              console.log(square.piece);
-              square.piece ? (this.activePiece = square.piece) : undefined;
+              console.log("Activate");
+              square.piece
+                ? (this.activePiece = square.piece)
+                : (this.activePiece = undefined);
             }
           },
         },
       }).mount("#app");
     </script>
-  </body> 
+  </body>
 </html>
