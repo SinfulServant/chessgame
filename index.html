@@ -45,12 +45,31 @@
         },
         methods: {
           changeSquareBackgroung(rowIndex, squareIndex) {
-            var isActive = () =>
-              this.activePiece &&
-              JSON.stringify(this.activePiece._position) ===
-                JSON.stringify({ x: squareIndex, y: rowIndex });
-            var orangeLight = isActive() ? "bg-orange-200" : "bg-orange-50";
-            var orangeBlack = isActive() ? "bg-orange-800" : "bg-orange-600";
+            var currentSquareString = JSON.stringify({
+              x: squareIndex,
+              y: rowIndex,
+            });
+            var isActive = () => {
+                // if (
+                //   this.game.whoseTurn ===
+                //   this.game.chessBoard[rowIndex][squareIndex].piece?.color
+                // )
+               return this.activePiece &&
+                  (JSON.stringify(this.activePiece._position) ===
+                    currentSquareString ||
+                    this.activePiece
+                      .possibleMoves()
+                      .find(
+                        (move) => JSON.stringify(move) === currentSquareString
+                      ));
+            };
+
+            var orangeLight = isActive()
+              ? "bg-orange-300 border"
+              : "bg-orange-50";
+            var orangeBlack = isActive()
+              ? "bg-orange-500 border"
+              : "bg-orange-700";
             return rowIndex % 2
               ? squareIndex % 2
                 ? orangeLight

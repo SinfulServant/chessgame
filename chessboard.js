@@ -10,20 +10,36 @@ class Piece {
     return this._position;
   }
 
-  doMove(nX, nY) {
-    var { x, y } = this._position;
-    if (
-      this.possibleMoves().find(
-        (possibleMove) =>
-          JSON.stringify(possibleMove) === JSON.stringify({ x: nX, y: nY })
-      )
-    ) {
-      this._position = { x: nX, y: nY };
-      this.game.chessBoard[nY][nX].isEmpty = false;
-      this.game.chessBoard[nY][nX].piece = this.game.chessBoard[y][x].piece;
+  doMove(nX, nY, additionalFunc = () => {}, force) {
+    if (this.game.whoseTurn === this.color) {
+      var { x, y } = this._position;
+      if (
+        force ||
+        this.possibleMoves().find(
+          (possibleMove) =>
+            JSON.stringify(possibleMove) === JSON.stringify({ x: nX, y: nY })
+        )
+      ) {
+        if (
+          // delete enemy piece
+          this.game.chessBoard[nY][nX].piece &&
+          this.game.chessBoard[nY][nX].piece.color !== this.color
+        )
+          this.game[this.color ? "blackPieces" : "whitePieces"] = this.game[
+            this.color ? "blackPieces" : "whitePieces"
+          ].filter((item) => item !== this.game.chessBoard[nY][nX].piece);
 
-      this.game.chessBoard[y][x].isEmpty = true;
-      this.game.chessBoard[y][x].piece = undefined;
+        // update data of NEW square
+        this._position = { x: nX, y: nY };
+        this.game.chessBoard[nY][nX].isEmpty = false;
+        this.game.chessBoard[nY][nX].piece = this.game.chessBoard[y][x].piece;
+        // update data of OLD square
+        this.game.chessBoard[y][x].isEmpty = true;
+        this.game.chessBoard[y][x].piece = undefined;
+
+        if (additionalFunc) additionalFunc();
+        this.game.whoseTurn = !this.game.whoseTurn;
+      }
     }
   }
 
@@ -48,12 +64,17 @@ class Pawn extends Piece {
     super(position, color, game);
   }
 
-  possibleMoves(enPassant) {
+  possibleMoves() {
     var { x, y } = this._position;
     var possibleMovesArr = [];
     if (!this.color) {
       // if black
-      if (y === 1) possibleMovesArr.push({ x: x, y: y + 2 }); // double move ahead
+      if (
+        y === 1 &&
+        this.game.chessBoard[y + 1][x].isEmpty &&
+        this.game.chessBoard[y + 2][x].isEmpty
+      )
+        possibleMovesArr.push({ x: x, y: y + 2 }); // double move ahead
       if (this.game.chessBoard[y + 1][x].isEmpty)
         possibleMovesArr.push({ x: x, y: y + 1 }); // move ahead
       if (
@@ -68,7 +89,12 @@ class Pawn extends Piece {
         possibleMovesArr.push({ x: x - 1, y: y + 1 }); // attack ahead left
     } else {
       // if white
-      if (y === 6) possibleMovesArr.push({ x: x, y: y - 2 }); // double move ahead
+      if (
+        y === 6 &&
+        this.game.chessBoard[y - 1][x].isEmpty &&
+        this.game.chessBoard[y - 2][x].isEmpty
+      )
+        possibleMovesArr.push({ x: x, y: y - 2 }); // double move ahead
       if (this.game.chessBoard[y - 1][x].isEmpty)
         possibleMovesArr.push({ x: x, y: y - 1 }); // move ahead
       if (
@@ -104,6 +130,13 @@ class Bishop extends Piece {
           possibleMovesArr.push({ x: newX, y: newY });
         if (
           this.game.chessBoard[newY][newX].piece &&
+          this.game.chessBoard[newY][newX].piece.color !== this.color &&
+          this.game.chessBoard[newY][newX].piece.pieceName === "King"
+        )
+          // if check to king
+          possibleMovesArr.push({ x: newX + xChanger, y: newY + yChanger });
+        if (
+          this.game.chessBoard[newY][newX].piece &&
           this.game.chessBoard[newY][newX].piece.color !== this.color
         )
           break;
@@ -111,6 +144,7 @@ class Bishop extends Piece {
         newY += yChanger;
       }
     };
+
     var diagonals = [
       [1, 1],
       [1, -1],
@@ -155,9 +189,8 @@ class Rook extends Piece {
 
   didMove = false;
 
-  doMove(nX, nY) {
-    super.doMove(nX, nY);
-    this.didMove = true;
+  doMove(nX, nY, _, force) {
+    super.doMove(nX, nY, () => (this.didMove = true), force);
   }
 
   possibleMoves() {
@@ -171,6 +204,13 @@ class Rook extends Piece {
           break;
         if (this.checkNextPositionPiece(newX, newY))
           possibleMovesArr.push({ x: newX, y: newY });
+        if (
+          this.game.chessBoard[newY][newX].piece &&
+          this.game.chessBoard[newY][newX].piece.color !== this.color &&
+          this.game.chessBoard[newY][newX].piece.pieceName === "King"
+        )
+          // if check to king
+          possibleMovesArr.push({ x: newX + xChanger, y: newY + yChanger });
         if (
           this.game.chessBoard[newY][newX].piece &&
           this.game.chessBoard[newY][newX].piece.color !== this.color
@@ -209,6 +249,13 @@ class Queen extends Piece {
           possibleMovesArr.push({ x: newX, y: newY });
         if (
           this.game.chessBoard[newY][newX].piece &&
+          this.game.chessBoard[newY][newX].piece.color !== this.color &&
+          this.game.chessBoard[newY][newX].piece.pieceName === "King"
+        )
+          // if check to king
+          possibleMovesArr.push({ x: newX + xChanger, y: newY + yChanger });
+        if (
+          this.game.chessBoard[newY][newX].piece &&
           this.game.chessBoard[newY][newX].piece.color !== this.color
         )
           break;
@@ -239,27 +286,74 @@ class King extends Piece {
   didMove = false;
 
   doMove(nX, nY) {
-    super.doMove(nX, nY);
-    this.didMove = true;
+    var startY = this.color ? 7 : 0;
+    var additionalLogicForDoMove = () => {
+      if (!this.didMove) {
+        if (nX === 2 && nY === startY) {
+          this.game.chessBoard[startY][0].piece.doMove(
+            3,
+            startY,
+            () => {},
+            true
+          );
+        }
+        if (nX === 6 && nY === startY) {
+          this.game.chessBoard[startY][7].piece.doMove(
+            5,
+            startY,
+            () => {},
+            true
+          );
+        }
+      }
+      this.didMove = true;
+      this.game.whoseTurn = this.color;
+    };
+    super.doMove(nX, nY, additionalLogicForDoMove);
   }
 
   possibleMoves(checkedByEnemyKing = false) {
     var possibleMovesArr = [];
     var { x, y } = this._position;
+
+    // checking castle
+    var checkColor = this.color ? 7 : 0;
     var castleToRightFree = [
-      !this.game.chessBoard[y][x + 1].isEmpty,
-      !this.game.chessBoard[y][x + 2].isEmpty,
-      !this.game.chessBoard[y][x + 3].didMove,
+      !this.didMove,
+      this.game.chessBoard[checkColor][5].isEmpty,
+      this.game.chessBoard[checkColor][6].isEmpty,
+      !this.game.chessBoard[checkColor][7].piece?.didMove,
+      this.game.chessBoard[checkColor][7].piece?.didMove !== undefined,
     ];
     var castleToLeftFree = [
-      !this.game.chessBoard[y][x - 1].isEmpty,
-      !this.game.chessBoard[y][x - 2].isEmpty,
-      !this.game.chessBoard[y][x - 3].isEmpty,
-      !this.game.chessBoard[y][x - 4].didMove,
+      !this.didMove,
+      this.game.chessBoard[checkColor][3].isEmpty,
+      this.game.chessBoard[checkColor][2].isEmpty,
+      this.game.chessBoard[checkColor][1].isEmpty,
+      !this.game.chessBoard[checkColor][0].piece?.didMove,
+      this.game.chessBoard[checkColor][0].piece?.didMove !== undefined,
     ];
-    // var isCastleToRightUnderAttack = castleToRightFree.slice(0, 2).every(item => !this.isSquareAttacked().has(JSON.stringify(item)))
-    // var isCastleToLeftUnderAttack = castleToLeftFree.slice(0, 2).every(item => !this.isSquareAttacked().has(JSON.stringify(item)))
+    if (castleToRightFree.every((item) => item))
+      possibleMovesArr.push({ x: x + 2, y: y });
+    if (castleToLeftFree.every((item) => item))
+      possibleMovesArr.push({ x: x - 2, y: y });
 
+    // checking the square where will be rook after castle, isn`t it under attack
+    var checkIsSquareFree = (possibleMove, _, arr) => {
+      var { x, y } = possibleMove;
+      if (
+        !this.didMove &&
+        ((x === 6 && y === checkColor) || (x === 2 && y === checkColor))
+      ) {
+        if (x === 6 && y === checkColor)
+          return arr.some((item) => item.x === 5 && item.y === checkColor);
+        if (x === 2 && y === checkColor)
+          return arr.some((item) => item.x === 3 && item.y === checkColor);
+      }
+      return true;
+    };
+
+    // main calc possible moves
     for (var newX = -1; newX <= 1; newX++) {
       if (
         this.positionValidator(x + newX, y + 1) &&
@@ -288,34 +382,33 @@ class King extends Piece {
 
     return checkedByEnemyKing
       ? possibleMovesArr
-      : possibleMovesArr.filter(
-          (pos) => !this.isSquareAttacked().has(JSON.stringify(pos))
-        );
+      : possibleMovesArr
+          .filter((pos) => !this.isSquareAttacked().has(JSON.stringify(pos)))
+          .filter(checkIsSquareFree);
   }
 
   // For checking is the square where the king wants to move is attacked by enemy piece
   isSquareAttacked() {
     var squaresUnderAttack = new Set();
-    for (var y = 0; y < 8; y++) {
-      for (var x = 0; x < 8; x++) {
-        var square = this.game.chessBoard[y][x];
-        if (square.piece && square.piece.color !== this.color) {
-          var possibleMoves =
-            square.piece.pieceName !== "Pawn"
-              ? square.piece.possibleMoves(true)
-              : (() => {
-                  var { x, y } = square.piece._position;
-                  return [
-                    { x: x + 1, y: square.piece.color ? y - 1 : y + 1 },
-                    { x: x - 1, y: square.piece.color ? y - 1 : y + 1 },
-                  ];
-                })();
+    var enemyPieces = this.color
+      ? this.game.blackPieces
+      : this.game.whitePieces;
 
-          possibleMoves.forEach((item) =>
-            squaresUnderAttack.add(JSON.stringify(item))
-          );
-        }
-      }
+    for (let piece of enemyPieces) {
+      var possibleMoves =
+        piece.pieceName !== "Pawn"
+          ? piece.possibleMoves(true)
+          : (() => {
+              var { x, y } = piece._position;
+              return [
+                { x: x + 1, y: piece.color ? y - 1 : y + 1 },
+                { x: x - 1, y: piece.color ? y - 1 : y + 1 },
+              ];
+            })();
+
+      possibleMoves.forEach((item) =>
+        squaresUnderAttack.add(JSON.stringify(item))
+      );
     }
     return squaresUnderAttack;
   }
@@ -325,7 +418,23 @@ class ChessBoard {
   chessBoard = [];
   constructor() {
     this.createNewGame();
+    this.writeDownPieces();
   }
+  blackPieces = [];
+  whitePieces = [];
+  whoseTurn = true;
+
+  writeDownPieces() {
+    for (let y = 0; y <= 7; y++) {
+      for (let x = 0; x <= 7; x++) {
+        this.chessBoard[y][x]?.piece?.color
+          ? this.whitePieces.push(this.chessBoard[y][x].piece)
+          : this.blackPieces.push(this.chessBoard[y][x].piece);
+      }
+      if (y === 1) y = 5;
+    }
+  }
+
   createNewGame() {
     for (var y = 0; y <= 7; y++) {
       this.chessBoard[y] = [];
@@ -410,37 +519,3 @@ class Square {
     this.position = position;
   }
 }
-
-// var game = new ChessBoard();
-// var chessBoard = game.chessBoard;
-
-// Show all board
-// for (let y = 0; y <= 7; y++) {
-//   for (let x = 0; x <= 7; x++) {
-//     doLog(`y: ${y} | x: ${x}`, game.chessBoard[y][x]);
-//   }
-// }
-
-// check king`s moves
-// var blackKing = chessBoard[0][4].piece;
-// chessBoard[1][4].piece.doMove(4, 3);
-// doLog(blackKing.possibleMoves().length, "Must be 1");
-// blackKing.doMove(4, 1);
-// doLog(blackKing.possibleMoves().length, "Must be 4");
-// blackKing.doMove(4, 2);
-// doLog(blackKing.possibleMoves().length, "Must be 5");
-// blackKing.doMove(5, 3);
-// doLog(blackKing.possibleMoves().length, "Must be 7");
-// blackKing.doMove(6, 4);
-// // doLog(blackKing.isSquareAttacked());
-// doLog(blackKing.possibleMoves().length, "Must be 5");
-
-//check knight moves
-// var knightBlackLeft = chessBoard[0][1].piece
-// console.log(knightBlackLeft.possibleMoves())
-// knightBlackLeft.doMove(2, 2)
-// console.log(knightBlackLeft.possibleMoves())
-// knightBlackLeft.doMove(4, 3)
-// console.log(knightBlackLeft.possibleMoves())
-// knightBlackLeft.doMove(2, 4)
-// console.log(knightBlackLeft.possibleMoves())
